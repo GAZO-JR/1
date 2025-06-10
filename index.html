@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>𝐈𝐒𝐀𝐆𝐈 - Plateforme de déploiement GitHub avec PAUL 🤖</title>
+<style>
+  /* Reset et base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: Arial, sans-serif;
+    background: #0b0c10;
+    color: #c5c6c7;
+    margin: 0; padding: 0;
+    min-height: 100vh;
+  }
+  header {
+    background-color: #45a29e;
+    padding: 1rem 2rem;
+    color: #0b0c10;
+    font-weight: bold;
+    font-size: 1.8rem;
+    letter-spacing: 3px;
+  }
+  nav {
+    background-color: #1f2833;
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 2rem;
+  }
+  nav a {
+    color: #66fcf1;
+    margin-right: 1rem;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  nav a:hover {
+    text-decoration: underline;
+  }
+  nav #logoutBtn {
+    cursor: pointer;
+  }
+  main {
+    padding: 2rem;
+    max-width: 900px;
+    margin: auto;
+  }
+  section {
+    display: none;
+  }
+  section.active {
+    display: block;
+  }
+  input, textarea, button, select {
+    width: 100%;
+    padding: 0.7rem;
+    margin-top: 0.4rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+    border: none;
+    font-size: 1rem;
+  }
+  input, textarea {
+    background-color: #1f2833;
+    color: #c5c6c7;
+  }
+  button {
+    background-color: #45a29e;
+    color: #0b0c10;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s;
+  }
+  button:hover {
+    background-color: #66fcf1;
+  }
+  h2 {
+    border-bottom: 2px solid #45a29e;
+    padding-bottom: 0.3rem;
+  }
+  .message {
+    margin-bottom: 1rem;
+    font-weight: bold;
+  }
+  #preview {
+    width: 100%;
+    height: 400px;
+    border: 2px solid #45a29e;
+    border-radius: 5px;
+  }
+  #chatbot {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    background: #1f2833;
+    width: 320px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px #45a29e;
+    color: #66fcf1;
+    font-family: monospace;
+    display: flex;
+    flex-direction: column;
+    max-height: 400px;
+  }
+  #chatbot header {
+    padding: 0.7rem;
+    background: #45a29e;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 10px 10px 0 0;
+  }
+  #chatLog {
+    flex-grow: 1;
+    padding: 0.7rem;
+    overflow-y: auto;
+    background: #0b0c10;
+    font-size: 0.9rem;
+  }
+  #chatInput {
+    border: none;
+    padding: 0.7rem;
+    border-radius: 0 0 10px 10px;
+    font-family: monospace;
+    font-size: 1rem;
+  }
+  #chatInput:focus {
+    outline: none;
+  }
+  .chat-message {
+    margin: 0.3rem 0;
+  }
+  .chat-user {
+    color: #66fcf1;
+  }
+  .chat-paul {
+    color: #f39c12;
+  }
+  .robot-img {
+    display: block;
+    margin: 0 auto 1rem;
+    max-width: 150px;
+  }
+  .admin-menu {
+    background-color: #c3073f;
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+  }
+  th, td {
+    border: 1px solid #45a29e;
+    padding: 0.5rem;
+    text-align: left;
+  }
+  th {
+    background-color: #45a29e;
+    color: #0b0c10;
+  }
+</style>
+</head>
+<body>
+
+<header>𝐈𝐒𝐀𝐆𝐈</header>
+
+<nav id="navBar">
+  <!-- Liens affichés dynamiquement -->
+</nav>
+
+<main>
+
+<!-- SECTION INSCRIPTION -->
+<section id="sectionSignup" class="active">
+  <h2>Inscription</h2>
+  <input type="email" id="signupEmail" placeholder="Email" />
+  <input type="password" id="signupPassword" placeholder="Mot de passe" />
+  <button id="btnSignup">S'inscrire</button>
+  <button data-oauth="facebook" class="oauthBtn">S'inscrire avec Facebook</button>
+  <button data-oauth="google" class="oauthBtn">S'inscrire avec Google</button>
+  <button data-oauth="github" class="oauthBtn">S'inscrire avec GitHub</button>
+  <div id="signupMessage" class="message"></div>
+</section>
+
+<!-- SECTION CONNEXION -->
+<section id="sectionLogin">
+  <h2>Connexion</h2>
+  <input type="text" id="loginId" placeholder="Votre ID ou Email" />
+  <input type="password" id="loginPassword" placeholder="Mot de passe" />
+  <button id="btnLogin">Se connecter</button>
+  <div id="loginMessage" class="message"></div>
+</section>
+
+<!-- DASHBOARD utilisateur -->
+<section id="sectionDashboard">
+  <h2>Bienvenue, <span id="userDisplayName"></span></h2>
+  <p>Utilisez la navigation pour accéder aux fonctionnalités.</p>
+</section>
+
+<!-- SECTION DEPLOY -->
+<section id="sectionDeploy">
+  <h2>Déployer un projet GitHub</h2>
+  <input type="text" id="repoUrl" placeholder="URL du dépôt GitHub" />
+  <select id="paymentMethod">
+    <option value="">Choisir moyen de paiement</option>
+    <option value="orange">Paiement Mobile Orange</option>
+    <option value="mtn">Paiement Mobile MTN</option>
+  </select>
+  <button id="btnDeploy">Déployer (1000 FCFA)</button>
+  <div id="deployMessage" class="message"></div>
+</section>
+
+<!-- SECTION CREER PAGE -->
+<section id="sectionCreatePage">
+  <h2>Créer une page web avec PAUL</h2>
+  <label for="pageTitle">Titre de la page :</label>
+  <input type="text" id="pageTitle" placeholder="Titre de votre page" />
+  <label for="pageContent">Contenu HTML de la page :</label>
+  <textarea id="pageContent" rows="8" placeholder="Entrez le code HTML ici..."></textarea>
+  <button id="btnGenerate">Générer l'aperçu</button>
+  <button id="btnDeployPage" disabled>Déployer la page (1000 FCFA)</button>
+  <div id="pageMessage" class="message"></div>
+  <iframe id="preview"></iframe>
+</section>
+
+<!-- SECTION HISTORIQUE -->
+<section id="sectionHistory">
+  <h2>Historique des déploiements</h2>
+  <div id="historyList">Aucun déploiement trouvé.</div>
+</section>
+
+<!-- SECTION CHATBOT -->
+<section id="sectionChatbot">
+  <h2>PAUL 🤖 - Votre assistant</h2>
+  <img src="https://cdn-icons-png.flaticon.com/512/4712/4712027.png" alt="Robot PAUL" class="robot-img" />
+  <div id="chatLog" style="height: 300px; overflow-y:auto; background:#1f2833; padding:10px; border-radius:5px;"></div>
+  <input type="text" id="chatInput" placeholder="Posez une question ou commandez..." />
+</section>
+
+<!-- SECTION ADMIN MENU -->
+<section id="sectionAdmin" class="admin-menu" style="display:none;">
+  <h2>Menu Administrateur</h2>
+  <h3>Utilisateurs inscrits :</h3>
+  <table id="tableUsers">
+    <thead><tr><th>ID</th><th>Email</th><th>Mot de passe</th><th>Nombre déploiements</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <h3>Envoyer un message à un utilisateur</h3>
+  <select id="selectUserToMsg"></select>
+  <input type="text" id="adminMsgText" placeholder="Votre message" />
+  <button id="btnSendMsg">Envoyer</button>
+  <div id="adminMsgStatus" class="message"></div>
+  <h3>Modifier le contenu du site</h3>
+  <textarea id="adminSiteEdit" rows="5" placeholder="Modifier le contenu visible du site ici..."></textarea>
+  <button id="btnSaveSiteEdit">Enregistrer modifications</button>
+  <div id="adminSiteEditStatus" class="message"></div>
+</section>
+
+</main>
+
+<!-- Chatbot flottant pour accès partout -->
+<div id="chatbot" style="display:none;">
+  <header>𝐏𝐀𝐔𝐋 🤖</header>
+  <div id="chatLogBot" style="flex-grow:1; padding:10px; overflow-y:auto; background:#0b0c10; color:#66fcf1;"></div>
+  <input type="text" id="chatInputBot" placeholder="Demandez-moi..." />
+</div>
+
+<script>
+(() => {
+  // === VARIABLES ===
+  const adminEmail = "isagi7797@gmail.com";
+
+  // Cache DOM
+  const navBar = document.getElementById('navBar');
+  const sections = {
+    signup: document.getElementById('sectionSignup'),
+    login: document.getElementById('sectionLogin'),
+    dashboard: document.getElementById('sectionDashboard'),
+    deploy: document.getElementById('sectionDeploy'),
+    createPage: document.getElementById('sectionCreatePage'),
+    history: document.getElementById('sectionHistory'),
+    chatbot: document.getElementById('sectionChatbot'),
+    admin: document.getElementById('sectionAdmin'),
+  };
+
+  const loginMessage = document.getElementById('loginMessage');
+  const signupMessage = document.getElementById('signupMessage');
+  const deployMessage = document.getElementById('deployMessage');
+  const pageMessage = document.getElementById('pageMessage');
+
+  const userDisplayName = document.getElementById('userDisplayName');
+  const historyList = document.getElementById('historyList');
+  const tableUsersBody = document.querySelector('#tableUsers tbody');
+  const selectUserToMsg = document.getElementById('selectUserToMsg');
+  const adminMsgStatus = document.getElementById('adminMsgStatus');
+  const adminSiteEdit = document.getElementById('adminSiteEdit');
+  const adminSiteEditStatus = document.getElementById('adminSiteEditStatus');
+
+  let currentUser = null;
+
+  // === UTILITAIRES ===
+
+  function showSection(name) {
+    Object.values(sections).forEach(sec => sec.classList.remove('active'));
+    if (sections[name]) sections[name].classList.add('active');
+  }
+
+  function saveUsers(users) {
+    localStorage.setItem('users', JSON.stringify(users));
+  }
+
+  function loadUsers() {
+    return JSON.parse(localStorage.getItem('users') || '[]');
+  }
+
+  function findUserByEmail(email) {
+    const users = loadUsers();
+    return users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  }
+
+  function findUserById(id) {
+    const users = loadUsers();
+    return users.find(u => u.id === id);
+  }
+
+  function generateUserId() {
+    return 'u' + Math.random().toString(36).slice(2, 9);
+  }
+
+  function updateNavForUser() {
+    navBar.innerHTML = '';
+    if (!currentUser) {
+      // Non connecté
+      navBar.innerHTML = `
+        <a data-section="signup">Inscription</a>
+        <a data-section="login">Connexion</a>
+      `;
+    } else {
+      navBar.innerHTML = `
+        <a data-section="dashboard">Accueil</a>
+        <a data-section="deploy">Déployer</a>
+        <a data-section="createPage">Créer une page</a>
+        <a data-section="history">Historique</a>
+        <a data-section="chatbot">Chatbot PAUL</a>
+        ${currentUser.email === adminEmail ? '<a data-section="admin">Admin</a>' : ''}
+        <a id="logoutBtn" style="color:#ff5555; cursor:pointer;">Déconnexion</a>
+      `;
+      document.getElementById('logoutBtn').onclick = () => {
+        currentUser = null;
+        sessionStorage.removeItem('loggedUser');
+        updateNavForUser();
+        showSection('signup');
+      };
+    }
+    // Add event listeners on nav links
+    [...navBar.querySelectorAll('a[data-section]')].forEach(a => {
+      a.onclick = () => {
+        showSection(a.getAttribute('data-section'));
+      };
+    });
+  }
+
+  function displayUserName() {
+    if (currentUser) {
+      userDisplayName.textContent = currentUser.email;
+    }
+  }
+
+  function showMessage(el, msg, isError = true) {
+    el.style.color = isError ? 'red' : '#45a29e';
+    el.textContent = msg;
+  }
+
+  // === GESTION INSCRIPTION ===
+  document.getElementById('btnSignup').onclick = () => {
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value.trim();
+
+    if (!email || !password) {
+      showMessage(signupMessage, "Tous les champs sont obligatoires.");
+      return;
+    }
+    if (!email.includes('@')) {
+      showMessage(signupMessage, "Email invalide.");
+      return;
+    }
+    if (password.length < 6) {
+      showMessage(signupMessage, "Mot de passe trop court (6 caractères min).");
+      return;
+    }
+
+    let users = loadUsers();
+    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+      showMessage(signupMessage, "Email déjà utilisé.");
+      return;
+    }
+    const newUser = {
+      id: generateUserId(),
+      email,
+      password,
+      deployments: []
+    };
+    users.push(newUser);
+    saveUsers(users);
+
+    showMessage(signupMessage, "Inscription réussie. Connectez-vous.", false);
+    // Auto switch to login
+    setTimeout(() => {
+      showSection('login');
+      signupMessage.textContent = '';
+    }, 1500);
+  };
+
+  // === GESTION CONNEXION ===
+  document.getElementById('btnLogin').onclick = () => {
+    const idOrEmail = document.getElementById('loginId').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    if (!idOrEmail || !password) {
+      showMessage(loginMessage, "Tous les champs sont obligatoires.");
+      return;
+    }
+    const users = loadUsers();
+    const user = users.find(u =>
+      (u.email.toLowerCase() === idOrEmail.toLowerCase() || u.id === idOrEmail)
+      && u.password === password
+    );
+    if (!user) {
+      showMessage(loginMessage, "Identifiants incorrects.");
+      return;
+    }
+    currentUser = user;
+    sessionStorage.setItem('loggedUser', JSON.stringify(user));
+    showMessage(loginMessage, "", false);
+    updateNavForUser();
+    displayUserName();
+    showSection('dashboard');
+  };
+
+  // === CHARGEMENT SESSION SI EXISTE ===
+  (() => {
+    const saved = sessionStorage.getItem('loggedUser');
+    if (saved) {
+      currentUser = JSON.parse(saved);
+      updateNavForUser();
+      displayUserName();
+      showSection('dashboard');
+    } else {
+      updateNavForUser();
+      showSection('signup');
+    }
+  })();
+
+  // === DEPLOY ===
+  document.getElementById('btnDeploy').onclick = () => {
+    const repoUrl = document.getElementById('repoUrl').value.trim();
+    const paymentMethod = document.getElementById('paymentMethod').value;
+
+    if (!repoUrl) {
+      showMessage(deployMessage, "Veuillez saisir l'URL du dépôt.");
+      return;
+    }
+    if (!paymentMethod) {
+      showMessage(deployMessage, "Veuillez choisir un moyen de paiement.");
+      return;
+    }
+    if (!currentUser) {
+      showMessage(deployMessage, "Vous devez être connecté.");
+      return;
+    }
+
+    // Simuler paiement
+    if (currentUser.email === adminEmail) {
+      // Admin gratuit
+      enregistrerDeploy(repoUrl);
+      showMessage(deployMessage, "Déploiement gratuit effectué (admin).", false);
+      return;
+    }
+
+    if (confirm(`Confirmez-vous le paiement de 1000 FCFA via ${paymentMethod} ?`)) {
+      enregistrerDeploy(repoUrl);
+      alert("Paiement confirmé, déploiement en cours !");
+      showMessage(deployMessage, "Déploiement effectué avec succès.", false);
+    } else {
+      showMessage(deployMessage, "Paiement annulé.");
+    }
+  };
+
+  function enregistrerDeploy(repoUrl) {
+    const deployment = {
+      id: 'd' + Math.random().toString(36).slice(2,9),
+      repoUrl,
+      date: new Date().toLocaleString()
+    };
+    const users = loadUsers();
+    const userIndex = users.findIndex(u => u.id === currentUser.id);
+    if (userIndex === -1) return;
+    users[userIndex].deployments = users[userIndex].deployments || [];
+    users[userIndex].deployments.push(deployment);
+    saveUsers(users);
+    currentUser = users[userIndex];
+    sessionStorage.setItem('loggedUser', JSON.stringify(currentUser));
+  }
+
+  // === CREER PAGE AVEC PAUL ===
+  const btnGenerate = document.getElementById('btnGenerate');
+  const btnDeployPage = document.getElementById('btnDeployPage');
+  const preview = document.getElementById('preview');
+  let currentPageData = null;
+
+  btnGenerate.onclick = () => {
+    const title = document.getElementById('pageTitle').value.trim();
+    const content = document.getElementById('pageContent').value.trim();
+    if (!title || !content) {
+      showMessage(pageMessage, "Le titre et le contenu sont obligatoires.");
+      return;
+    }
+    const pageHTML = `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head><meta charset="UTF-8" /><title>${title}</title></head>
+    <body style="font-family: Arial,sans-serif; padding:1rem; background:#f0f0f0; color:#222;">
+      <h1>${title}</h1>
+      ${content}
+    </body>
+    </html>`;
+
+    const blob = new Blob([pageHTML], {type: 'text/html'});
+    const url = URL.createObjectURL(blob);
+
+    preview.src = url;
+    showMessage(pageMessage, "Aperçu généré. Vous pouvez maintenant déployer.", false);
+    btnDeployPage.disabled = false;
+
+    currentPageData = {title, html: pageHTML, createdAt: new Date().toISOString()};
+  };
+
+  btnDeployPage.onclick = () => {
+    if (!currentPageData) {
+      showMessage(pageMessage, "Générez d'abord un aperçu.");
+      return;
+    }
+    if (!currentUser) {
+      showMessage(pageMessage, "Vous devez être connecté.");
+      return;
+    }
+    if (currentUser.email === adminEmail) {
+      enregistrerPage(currentPageData);
+      showMessage(pageMessage, "Page déployée gratuitement (admin).", false);
+      return;
+    }
+    if (confirm("Confirmez-vous le paiement de 1000 FCFA pour déployer cette page ?")) {
+      enregistrerPage(currentPageData);
+      alert("Paiement reçu et page déployée !");
+      showMessage(pageMessage, "Page déployée avec succès.", false);
+    } else {
+      showMessage(pageMessage, "Paiement annulé.");
+    }
+  };
+
+  function enregistrerPage(page) {
+    const users = loadUsers();
+    const idx = users.findIndex(u => u.id === currentUser.id);
+    if (idx < 0) return;
+    users[idx].deployments = users[idx].deployments || [];
+    users[idx].deployments.push({...page, id:'p'+Math.random().toString(36).slice(2,9)});
+    saveUsers(users);
+    currentUser = users[idx];
+    sessionStorage.setItem('loggedUser', JSON.stringify(currentUser));
+  }
+
+  // === HISTORIQUE ===
+  function afficherHistorique() {
+    if (!currentUser || !currentUser.deployments || currentUser.deployments.length === 0) {
+      historyList.innerHTML = "Aucun déploiement trouvé.";
+      return;
+    }
+    const items = currentUser.deployments.map(d => {
+      if (d.repoUrl) {
+        return `<div><b>Dépôt:</b> <a href="${d.repoUrl}" target="_blank">${d.repoUrl}</a> <br/><small>${d.date}</small></div><hr>`;
+      } else if(d.html) {
+        return `<div><b>Page:</b> ${d.title} <br/><small>${new Date(d.createdAt).toLocaleString()}</small></div><hr>`;
+      }
+      return '';
+    }).join('');
+    historyList.innerHTML = items;
+  }
+
+  // Actualiser historique à l'affichage
+  sections.history.addEventListener('transitionstart', afficherHistorique);
+  // Comme il n'y a pas de transition, on met sur le clic nav pour la section
+  navBar.addEventListener('click', e => {
+    if(e.target.dataset.section === 'history') afficherHistorique();
+  });
+
+  // === CHATBOT PAUL (simplifié) ===
+  const chatLog = document.getElementById('chatLog');
+  const chatInput = document.getElementById('chatInput');
+  const btnChatSend = document.getElementById('btnChatSend');
+
+  btnChatSend.onclick = () => {
+    const text = chatInput.value.trim();
+    if (!text) return;
+    addChatMessage('user', text);
+    chatInput.value = '';
+    setTimeout(() => {
+      addChatMessage('paul', generatePaulReply(text));
+    }, 500);
+  };
+
+  function addChatMessage(who, msg) {
+    const div = document.createElement('div');
+    div.className = who === 'user' ? 'userMsg' : 'paulMsg';
+    div.textContent = msg;
+    chatLog.appendChild(div);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  function generatePaulReply(input) {
+    const lower = input.toLowerCase();
+    if (lower.includes('bonjour')) return "Bonjour ! Comment puis-je vous aider aujourd'hui ?";
+    if (lower.includes('aide')) return "Je suis là pour vous aider. Que souhaitez-vous faire ?";
+    if (lower.includes('déployer')) return "Pour déployer, allez dans la section 'Déployer' et entrez l'URL de votre dépôt.";
+    if (lower.includes('créer page')) return "Utilisez la section 'Créer une page' pour générer et déployer une page personnalisée.";
+    return "Je ne comprends pas bien, pouvez-vous reformuler ?";
+  }
+
+  // === ADMIN (édition site) ===
+  if (adminSiteEdit) {
+    adminSiteEdit.value = localStorage.getItem('adminSiteContent') || '';
+  }
+  if (adminSiteEditStatus) {
+    adminSiteEdit.oninput = () => {
+      localStorage.setItem('adminSiteContent', adminSiteEdit.value);
+      adminSiteEditStatus.textContent = 'Contenu sauvegardé localement.';
+      setTimeout(() => { adminSiteEditStatus.textContent = ''; }, 2000);
+    };
+  }
+
+})();  
+</script>
+
+</body>
+</html>
